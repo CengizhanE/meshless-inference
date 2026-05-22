@@ -9,19 +9,25 @@ import os
 
 hide_st_style = """
 <style>
-/* Hide the main menu (hamburger) */
-#MainMenu {visibility: hidden;}
+/* Make the header completely transparent so the sidebar toggle survives */
+header {
+    background: transparent !important;
+}
 
-/* Hide the standard Streamlit header (the colored top line and deploy button) */
-header {display: none !important;}
+/* Hide the right-side Streamlit toolbar (Deploy button, hamburger menu) */
+[data-testid="stToolbar"] {
+    display: none !important;
+}
 
 /* Hide the standard Streamlit footer */
 footer {visibility: hidden;}
 
-/* Eliminate top/bottom padding to mimic edge-to-edge embed look */
+/* Add professional margins back to the main UI container */
 .block-container {
-    padding-top: 0rem !important;
-    padding-bottom: 0rem !important;
+    padding-top: 3rem !important;
+    padding-bottom: 2rem !important;
+    padding-left: 4rem !important;
+    padding-right: 4rem !important;
 }
 </style>
 """
@@ -119,7 +125,7 @@ def load_zscores(json_path="dataset/zscore.json"):
 def main():
     st.set_page_config(
         page_title="Meshless.ai | CFD Engine",
-        page_icon="✈️",
+        page_icon="meshless_logo.png",
         layout="wide",
         initial_sidebar_state="expanded"
     )
@@ -133,15 +139,16 @@ def main():
     st.sidebar.header("Airfoil & Flight Parameters")
     st.sidebar.markdown("Adjust the NACA 4-digit profile and Angle of Attack. Inputs are strictly bounded to the model's training distribution.")
 
-    m = st.sidebar.slider("Maximum Camber (m)", min_value=0.0, max_value=0.06, value=0.02, step=0.01, format="%.2f")
-    p = st.sidebar.slider("Max Camber Position (p)", min_value=0.2, max_value=0.6, value=0.4, step=0.1, format="%.1f")
-    t = st.sidebar.slider("Thickness (t)", min_value=0.08, max_value=0.25, value=0.12, step=0.01, format="%.2f")
-    aoa_deg = st.sidebar.slider("Angle of Attack (deg)", min_value=-4.0, max_value=8.0, value=2.0, step=0.5, format="%.1f")
-
+    # Expanded slider ranges for standard NACA limits
+    m = st.sidebar.slider("Maximum Camber (m)", min_value=0.0, max_value=0.06, value=0.02, step=0.001, format="%.3f")
+    p = st.sidebar.slider("Max Camber Position (p)", min_value=0.2, max_value=0.6, value=0.4, step=0.01, format="%.2f")
+    t = st.sidebar.slider("Thickness (t)", min_value=0.08, max_value=0.25, value=0.12, step=0.001, format="%.3f")
+    aoa_deg = st.sidebar.slider("Angle of Attack (deg)", min_value=-4.0, max_value=8.0, value=2.0, step=0.1, format="%.1f")
+    
     naca_designation = f"NACA {int(m*100)}{int(p*10)}{int(t*100):02d}"
     
     st.sidebar.divider()
-    simulate_btn = st.sidebar.button("🚀 Simulate Physics", type="primary", use_container_width=True)
+    simulate_btn = st.sidebar.button("Simulate Physics", type="primary", use_container_width=True)
 
     # --- Inference Pipeline ---
     if simulate_btn:
