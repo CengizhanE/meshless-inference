@@ -7,25 +7,25 @@ import json
 import time
 import os
 
-# Inject custom CSS to completely eradicate Streamlit branding
-hide_streamlit_style = """
+hide_st_style = """
 <style>
-    /* Nuke the header and footer completely */
-    header {display: none !important;}
-    footer {display: none !important;}
-    
-    /* Target the specific Streamlit embed bottom bar */
-    [data-testid="stBottom"] {display: none !important;}
-    [data-testid="stHeader"] {display: none !important;}
-    
-    /* Pull the UI up to remove the massive empty space at the top */
-    .block-container {
-        padding-top: 1rem !important;
-        padding-bottom: 0rem !important;
-    }
+/* Hide the main menu (hamburger) */
+#MainMenu {visibility: hidden;}
+
+/* Hide the standard Streamlit header (the colored top line and deploy button) */
+header {display: none !important;}
+
+/* Hide the standard Streamlit footer */
+footer {visibility: hidden;}
+
+/* Eliminate top/bottom padding to mimic edge-to-edge embed look */
+.block-container {
+    padding-top: 0rem !important;
+    padding-bottom: 0rem !important;
+}
 </style>
 """
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+st.markdown(hide_st_style, unsafe_allow_html=True)
 
 # --- Domain/Project Imports ---
 from src.models.unet import UNetPhysicsSurrogate
