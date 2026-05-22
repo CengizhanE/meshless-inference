@@ -7,18 +7,21 @@ import json
 import time
 import os
 
-# Inject custom CSS to hide Streamlit branding and adjust padding
+# Inject custom CSS to completely eradicate Streamlit branding
 hide_streamlit_style = """
 <style>
-    /* Hide the 'Built with Streamlit' badge and header/footer */
-    header {visibility: hidden;}
-    footer {visibility: hidden;}
-    a[href^="https://streamlit.io/cloud"] {display: none !important;}
+    /* Nuke the header and footer completely */
+    header {display: none !important;}
+    footer {display: none !important;}
+    
+    /* Target the specific Streamlit embed bottom bar */
+    [data-testid="stBottom"] {display: none !important;}
+    [data-testid="stHeader"] {display: none !important;}
     
     /* Pull the UI up to remove the massive empty space at the top */
     .block-container {
-        padding-top: 1rem;
-        padding-bottom: 0rem;
+        padding-top: 1rem !important;
+        padding-bottom: 0rem !important;
     }
 </style>
 """
