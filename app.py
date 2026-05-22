@@ -7,6 +7,23 @@ import json
 import time
 import os
 
+# Inject custom CSS to hide Streamlit branding and adjust padding
+hide_streamlit_style = """
+<style>
+    /* Hide the 'Built with Streamlit' badge and header/footer */
+    header {visibility: hidden;}
+    footer {visibility: hidden;}
+    a[href^="https://streamlit.io/cloud"] {display: none !important;}
+    
+    /* Pull the UI up to remove the massive empty space at the top */
+    .block-container {
+        padding-top: 1rem;
+        padding-bottom: 0rem;
+    }
+</style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
 # --- Domain/Project Imports ---
 from src.models.unet import UNetPhysicsSurrogate
 
