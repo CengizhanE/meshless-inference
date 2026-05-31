@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,29 +10,59 @@ import os
 
 hide_st_style = """
 <style>
-/* Make the header completely transparent so the sidebar toggle survives */
-header {
-    background: transparent !important;
-}
-
-/* Hide the right-side Streamlit toolbar (Deploy button, hamburger menu) */
-[data-testid="stToolbar"] {
-    display: none !important;
-}
+/* Safely hide the top-right menu and deploy buttons without breaking the header */
+[data-testid="stToolbar"] {visibility: hidden !important;}
 
 /* Hide the standard Streamlit footer */
 footer {visibility: hidden;}
 
 /* Add professional margins back to the main UI container */
 .block-container {
-    padding-top: 3rem !important;
+    padding-top: 2rem !important;
     padding-bottom: 2rem !important;
     padding-left: 4rem !important;
     padding-right: 4rem !important;
 }
 </style>
 """
-st.markdown(hide_st_style, unsafe_allow_html=True)
+def toggle_sidebar():
+    """on_click callback — fires BEFORE the rerun so CSS sees the new state."""
+    st.session_state.sidebar_open = not st.session_state.sidebar_open
+
+def apply_sidebar_css(is_open: bool):
+    base_css = """
+    [data-testid="stToolbar"] { visibility: hidden !important; }
+    footer { visibility: hidden; }
+    .block-container {
+        padding-top: 2rem !important;  padding-bottom: 2rem !important;
+        padding-left: 4rem !important; padding-right: 4rem !important;
+    }
+    /* Optional: hide the native Streamlit collapse arrow to avoid confusion */
+    [data-testid="stSidebarCollapseButton"]  { display: none !important; }
+    [data-testid="stSidebarCollapsedControl"]{ display: none !important; }
+    """
+    sidebar_css = "" if is_open else """
+    section[data-testid="stSidebar"] {
+        display: none !important;
+        visibility: hidden !important;
+    }
+    """
+    st.markdown(f"<style>{base_css}{sidebar_css}</style>", unsafe_allow_html=True)
+
+# --- Javascript Injection Hack ---
+# This reaches into the browser DOM to manually trigger Streamlit's hidden sidebar button
+def force_open_sidebar():
+    components.html(
+        """
+        <script>
+        const oldButton = window.parent.document.querySelector('[data-testid="collapsedControl"]');
+        const newButton = window.parent.document.querySelector('[data-testid="stSidebarCollapsedControl"]');
+        if (oldButton) { oldButton.click(); }
+        else if (newButton) { newButton.click(); }
+        </script>
+        """,
+        height=0, width=0
+    )
 
 # --- Domain/Project Imports ---
 from src.models.unet import UNetPhysicsSurrogate
@@ -43,7 +74,6 @@ except ImportError:
 
 
 # --- Live Inference Data Generator ---
-# Extracted the geometric math from extract_tensors.py for real-time tensor generation
 def generate_inference_tensor(m, p, t, aoa_deg):
     X = np.linspace(-0.5, 1.5, 128)
     Y = np.linspace(-0.5, 0.5, 128)
@@ -75,7 +105,7 @@ def generate_inference_tensor(m, p, t, aoa_deg):
     # Apply Masks
     inside_airfoil = (grid_x_unrot >= 0) & (grid_x_unrot <= 1.0) & (grid_y_unrot <= y_upper) & (grid_y_unrot >= y_lower)
     
-    # Generate SDF and AoA Tensors (Matches Step 7 in your pipeline)
+    # Generate SDF and AoA Tensors
     binary_mask = np.ones_like(grid_x)
     binary_mask[inside_airfoil] = 0.0
     sdf = distance_transform_edt(binary_mask)
@@ -123,15 +153,34 @@ def load_zscores(json_path="dataset/zscore.json"):
 
 # --- Main App Configuration ---
 def main():
+    # 1. MUST be the very first Streamlit call — nothing before this
     st.set_page_config(
         page_title="Meshless.ai | CFD Engine",
         page_icon="meshless_logo.png",
         layout="wide",
-        initial_sidebar_state="expanded"
+        initial_sidebar_state="expanded",
     )
 
-    # --- Header ---
-    st.title("Meshless.ai - Real-Time Aerodynamics")
+    # 2. Initialize sidebar state
+    if "sidebar_open" not in st.session_state:
+        st.session_state.sidebar_open = True
+
+    # 3. Apply CSS immediately — on_click callback has already updated the
+    #    state BEFORE this rerun, so this always reads the correct value
+    apply_sidebar_css(st.session_state.sidebar_open)
+
+    # 4. Header — replace the if st.button(...) pattern with on_click=
+    col1, col2 = st.columns([0.85, 0.15])
+    with col1:
+        st.title("Meshless.ai - Real-Time Aerodynamics")
+    with col2:
+        st.write("")
+        st.button(
+            "⚙️ Toggle Sidebar",
+            on_click=toggle_sidebar,      # ← callback, not if-block
+            use_container_width=True,
+        )
+           
     st.markdown("### AI-Driven Surrogate CFD Engine | 12-Drag-Count Accuracy | Millisecond Inference")
     st.divider()
 
@@ -139,7 +188,6 @@ def main():
     st.sidebar.header("Airfoil & Flight Parameters")
     st.sidebar.markdown("Adjust the NACA 4-digit profile and Angle of Attack. Inputs are strictly bounded to the model's training distribution.")
 
-    # Expanded slider ranges for standard NACA limits
     m = st.sidebar.slider("Maximum Camber (m)", min_value=0.0, max_value=0.06, value=0.02, step=0.001, format="%.3f")
     p = st.sidebar.slider("Max Camber Position (p)", min_value=0.2, max_value=0.6, value=0.4, step=0.01, format="%.2f")
     t = st.sidebar.slider("Thickness (t)", min_value=0.08, max_value=0.25, value=0.12, step=0.001, format="%.3f")
@@ -175,18 +223,17 @@ def main():
                 norm_cl = norm_coeffs[0, 0]
                 norm_cd = norm_coeffs[0, 1]
 
-            # 3. Denormalization (UPDATED to match your zscore.json)
+            # 3. Denormalization
             mu_p = zscores['mu']
             sigma_p = zscores['sigma']
             
             # Denormalize pressure field
             pressure_field = (norm_pressure.cpu().numpy()[0, 0, :, :] * sigma_p) + mu_p
             
-            # Since Cl and Cd are not in zscore.json, we assume the model output them as raw physical values
             cl_pred = norm_cl.cpu().item()
             cd_pred = norm_cd.cpu().item()
             
-            # Convert Cd to drag counts (1 count = 0.0001 Cd)
+            # Convert Cd to drag counts
             drag_counts = cd_pred * 10000
             inference_time_ms = (time.perf_counter() - start_time) * 1000
 
@@ -202,18 +249,13 @@ def main():
             st.divider()
             st.markdown("### Pressure Field Visualization")
             
-            # Mask out the airfoil body for plotting based on the exact same grid
             masked_pressure = np.ma.masked_where(inside_airfoil_mask, pressure_field)
 
             fig, ax = plt.subplots(figsize=(12, 6))
-            
-            # Generate meshgrid matching the extracted bounding box (-0.5 to 1.5, -0.5 to 0.5)
             X, Y = np.meshgrid(np.linspace(-0.5, 1.5, 128), np.linspace(-0.5, 0.5, 128))
             
-            # Plot
             mesh = ax.pcolormesh(X, Y, masked_pressure, cmap='jet', shading='auto')
             
-            # Generate outline purely for aesthetic overlay
             generator = NACAGenerator(num_points=200)
             x_coords, y_coords = generator.generate_airfoil(m=m, p=p, t=t)
             aoa_rad_rot = np.radians(-aoa_deg)
