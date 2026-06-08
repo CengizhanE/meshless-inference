@@ -237,15 +237,9 @@ def load_zscores(json_path="dataset/zscore.json"):
 
 # --- Main App Configuration ---
 def main():
-    st.markdown("""
-    <head>
-        <link rel="shortcut icon" href="https://raw.githubusercontent.com/CengizhanE/meshless-inference/main/meshless_logo.png">
-    </head>
-    """, unsafe_allow_html=True)
-
     st.set_page_config(
         page_title="Meshless.ai | CFD Engine",
-        #page icon was here
+        page_icon="https://raw.githubusercontent.com/CengizhanE/meshless-inference/main/meshless_logo.png",
         layout="wide",
         initial_sidebar_state="expanded",
     )
