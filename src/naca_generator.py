@@ -1,12 +1,11 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import random
 
 class NACAGenerator:
     def __init__(self, num_points=200):
         # Cosine spacing clusters points at the leading/trailing edges for better CFD meshing
         beta = np.linspace(0, np.pi, num_points)
-        self.x = (1- np.cos(beta)) / 2
+        self.x = (1 - np.cos(beta)) / 2
 
     def generate_airfoil(self, m, p, t):
         """
@@ -19,10 +18,10 @@ class NACAGenerator:
 
         # Thickness distribution
         yt = 5 * t * (0.2969 * np.sqrt(x) -
-                    0.1260 * x -
-                    0.3516 * (x**2) +
-                    0.2843 * (x**3) -
-                    0.1015 * (x**4)) # 0.1015 ensures closed trailing edge
+                      0.1260 * x -
+                      0.3516 * (x**2) +
+                      0.2843 * (x**3) -
+                      0.1015 * (x**4))
         
         # Camber line and gradient
         yc = np.zeros_like(x)
@@ -61,27 +60,18 @@ class NACAGenerator:
 
 # --- Test the Factory Logic ---
 if __name__ == "__main__":
+    # This block now only runs generation/export without needing matplotlib
     generator = NACAGenerator(num_points=150)
 
-    # Generate 3 random training samples
-    plt.figure(figsize=(10,4))
-
-    for i in range (3):
+    for i in range(3):
         # Randomize within sensible aerodynamic limits
-        m = random.uniform(0.0, 0.06)       # 0 to 6% camber
-        p = random.uniform(0.2, 0.6)        # Max camber at 20% to 60% chord
-        t = random.uniform(0.08, 0.25)      # 8% to 25% thickness
+        m = random.uniform(0.0, 0.06)      # 0 to 6% camber
+        p = random.uniform(0.2, 0.6)       # Max camber at 20% to 60% chord
+        t = random.uniform(0.08, 0.25)     # 8% to 25% thickness
 
         name = f"NACA_{int(m*100)}{int(p*10)}{int(t*100):02d}"
 
         X, Y = generator.generate_airfoil(m, p, t)
         generator.export_for_meshing(f"{name}.csv", X, Y)
-
-        plt.plot(X, Y, label=name)
-
-    plt.title("Randomized NACA Profiles for Surrogate Model Training")
-    plt.axis('equal')
-    plt.grid(True, linestyle='--', alpha=0.6)
-    plt.legend()
-    plt.savefig('generated_airfoils.png', dpi=300)
-    print("Plot saved as generated_airfoils.png")
+        
+    print("Test generation complete.")
