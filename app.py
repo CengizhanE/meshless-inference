@@ -1,17 +1,15 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import streamlit as st
 import torch
 import numpy as np
 from scipy.ndimage import distance_transform_edt
 import json
 import time
-import os
 import pandas as pd
 import plotly.graph_objects as go
-
-# --- Domain/Project Imports ---
 from src.models.unet import UNetPhysicsSurrogate
-
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 try:
     from src.naca_generator import NACAGenerator
