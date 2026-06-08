@@ -151,7 +151,11 @@ def inject_custom_css(is_sidebar_open: bool):
     /* --- Sidebar Typography --- */
     /* Force Inter explicitly on all text elements inside the sidebar */
     [data-testid="stSidebar"] h1,
-    [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h2, {{
+        font-size: 2.5rem !important;      
+        letter-spacing: -0.5px !important; 
+        white-space: nowrap !important;    
+    }}
     [data-testid="stSidebar"] h3,
     [data-testid="stSidebar"] p,
     [data-testid="stSidebar"] span,
