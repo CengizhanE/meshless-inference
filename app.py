@@ -46,8 +46,11 @@ def inject_custom_css(is_sidebar_open: bool):
     [data-testid="stToolbar"] {{ visibility: hidden !important; }}
     footer {{ visibility: hidden; }}
     .block-container {{
-        padding-top: 2rem !important;  padding-bottom: 2rem !important;
-        padding-left: 4rem !important; padding-right: 4rem !important;
+        max-width: 95% !important;     
+        padding-top: 2rem !important; 
+        padding-bottom: 2rem !important;
+        padding-left: 2rem !important;  
+        padding-right: 2rem !important;   
     }}
     [data-testid="stSidebarCollapseButton"]  {{ display: none !important; }}
     [data-testid="stSidebarCollapsedControl"]{{ display: none !important; }}
