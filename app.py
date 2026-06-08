@@ -11,8 +11,7 @@ import plotly.graph_objects as go
 # --- Domain/Project Imports ---
 from src.models.unet import UNetPhysicsSurrogate
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))touch src/__init__.py
-
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 try:
     from src.naca_generator import NACAGenerator
