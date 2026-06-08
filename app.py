@@ -13,8 +13,9 @@ from src.models.unet import UNetPhysicsSurrogate
 
 try:
     from src.naca_generator import NACAGenerator
-except ImportError:
-    st.error("Backend modules not found. Ensure 'src.naca_generator' is in the PYTHONPATH.")
+except ImportError as e:
+    st.error(f"Import failed: {e}")
+    st.stop()
 
 
 # --- UI & Styling Configuration ---
