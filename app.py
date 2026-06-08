@@ -50,8 +50,8 @@ def inject_custom_css(is_sidebar_open: bool):
         max-width: 95% !important;     
         padding-top: 2rem !important; 
         padding-bottom: 2rem !important;
-        padding-left: 2rem !important;  
-        padding-right: 2rem !important;   
+        padding-left: 3rem !important;  
+        padding-right: 3rem !important;   
     }}
     [data-testid="stSidebarCollapseButton"]  {{ display: none !important; }}
     [data-testid="stSidebarCollapsedControl"]{{ display: none !important; }}
@@ -133,6 +133,12 @@ def inject_custom_css(is_sidebar_open: bool):
     /* 6. Hide Streamlit's Default Header Anchor Links */
     h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {{
         display: none !important;
+    }}
+
+    /* 7. Sidebar Custom Padding */
+    [data-testid="stSidebarUserContent"] {{
+        padding-left: 1rem !important;  /* Pushes content away from the far left edge */
+        padding-right: 1rem !important; /* Adds a bit of space before the scrollbar */
     }}
 
     hr {{
@@ -287,10 +293,6 @@ def main():
     naca_designation = f"NACA {int(m*100)}{int(p*10)}{int(t*100):02d}"
     
     st.sidebar.divider()
-    st.sidebar.markdown("**Visualization Settings**")
-    plot_theme = st.sidebar.radio("Graph Theme", ["Dark", "Light"], horizontal=True)
-    
-    st.sidebar.divider()
     
     # 2. Update the Memory when Button is Clicked
     simulate_btn = st.sidebar.button("Simulate Physics", type="primary", use_container_width=True)
@@ -333,21 +335,13 @@ def main():
             st.divider()
             st.markdown("### Pressure Field Visualization")
             
-            # --- Dynamic Graph Theme Setup for Plotly ---
-            if plot_theme == "Dark":
-                fig_bg = 'rgba(0,0,0,0)' # Transparent so Streamlit gradient shows
-                ax_bg = '#0e1117'
-                airfoil_fill = '#000000'
-                airfoil_edge = 'white'
-                text_color = '#ffffff'
-                grid_color = '#2b303b'
-            else:
-                fig_bg = '#ffffff'
-                ax_bg = '#ffffff'
-                airfoil_fill = '#333333'
-                airfoil_edge = 'black'
-                text_color = '#000000'
-                grid_color = '#e6e6e6'
+            # --- Permanent Dark Theme Setup for Plotly ---
+            fig_bg = 'rgba(0,0,0,0)' 
+            ax_bg = '#0e1117'
+            airfoil_fill = '#000000'
+            airfoil_edge = 'white'
+            text_color = '#ffffff'
+            grid_color = '#2b303b'
 
             # Plotly prefers np.nan for masked areas to render them transparently
             pressure_for_plotly = np.where(inside_airfoil_mask, np.nan, pressure_field)
