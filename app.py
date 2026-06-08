@@ -6,7 +6,7 @@ import json
 import time
 import os
 import pandas as pd
-import plotly.graph_objects as go  # <-- NEW: Plotly Import
+import plotly.graph_objects as go
 
 # --- Domain/Project Imports ---
 from src.models.unet import UNetPhysicsSurrogate
